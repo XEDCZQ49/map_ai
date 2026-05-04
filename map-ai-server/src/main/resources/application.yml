@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: map-ai-server
+  data:
+    redis:
+      client-type: jedis
+      host:  ${HUAWEI_HOST}
+      port: 16379
+      database: 0
+      connect-timeout: 3s
+      timeout: 2s
+  ai:
+    dashscope:
+      api-key: ${QWEN_KEY}
+    vectorstore:
+      redis:
+        initialize-schema: true
+        index-name: rag_vector_index_v1
+        prefix: "vec:"
+
+logging:
+  level:
+    # DashScope 在无音频 23s 时会回 task_failed，这里属于预期关闭，关闭该类日志避免误报。
+    com.alibaba.dashscope.protocol.okhttp.OkHttpWebSocketClient: "OFF"

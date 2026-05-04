@@ -1,0 +1,392 @@
+.voice_chat {
+    width: 800px;
+    height: 540px;
+    background: #FFFFFF;
+    position: relative;
+    // 开始聊天
+    .voice_chat_wrapper {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        position: absolute;
+        .voice_chat_btn {
+            width: 116px;
+            height: 116px;
+            margin-left: 54px;
+            // background: #2932E1;
+            border-radius: 50%;
+            cursor: pointer;
+            background: url("../../../assets/image/ic_start-chat.svg");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 116px 116px;
+            margin-bottom: 17px;
+            &:hover {
+                width: 116px;
+                height: 116px;
+                background: url("../../../assets/image/ic_start-chat_hover.svg");
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 116px 116px;
+            };
+           
+        };
+        .voice_chat_btn_title {
+            height: 22px;
+            font-family: PingFangSC-Medium;
+            font-size: 16px;
+            color: #000000;
+            letter-spacing: 0;
+            text-align: center;
+            line-height: 22px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        };
+        .voice_chat_btn_prompt {
+            height: 24px;
+            font-family: PingFangSC-Regular;
+            font-size: 14px;
+            color: #999999;
+            letter-spacing: 0;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 400;
+        };
+    };
+    .voice_chat_wrapper::after {
+        content: "";
+        display: block;
+        clear: both;
+        visibility: hidden;
+    };
+    // 结束聊天
+    .voice_chat_dialog_wrapper {
+        width: 770px;
+        height: 540px;
+        background: #FFFFFF;
+        position: relative;
+        margin: 0 auto;
+        .dialog_box {
+            width: 100%;
+            height: 370px;
+            padding: 10px 10px 10px 10px;
+            box-sizing: border-box;
+           
+            .dialog_content {
+                width: 100%;
+                height: 100%;
+                // background: rgb(113, 144, 145);
+                padding: 0px;  
+                overflow: auto;           
+                li {
+                    list-style-type: none;
+                    margin-bottom: 33px;
+                    display: flex;
+                    align-items: center;
+                    &:last-of-type(1) {
+                        margin-bottom: 0px;
+                    };
+                    .dialog_content_img_pp {
+                        width: 60px;
+                        height: 60px;
+                        // transform: scaleX(-1);
+                        background: url("../../../assets/image/用户头像@2x.png");
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        background-size: 60px 60px;
+                        margin-right: 5px;
+                    };
+                    .dialog_content_img_user {
+                        width: 60px;
+                        height: 60px;
+                        transform: scaleX(-1);
+                        background: url("../../../assets/image/用户头像@2x.png");
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        background-size: 60px 60px;
+                        margin-left: 5px;
+                    };
+                    .dialog_content_dialogue_pp {
+                        width: auto; /* 明确指出宽度自动调整 */
+                        max-width: 80%; /* 设置最大宽度为父容器的80% */
+                        background: #F5F5F5;
+                        border-radius: 25px;
+                        font-family: PingFangSC-Regular;
+                        font-size: 14px;
+                        color: #000000;
+                        line-height: 30px;
+                        font-weight: 400;
+                        padding: 0px 16px;
+                        box-sizing: border-box;
+                        :deep(h1), :deep(h2), :deep(h3) {
+                            margin: 8px 0 6px 0;
+                            font-weight: 600;
+                            line-height: 1.4;
+                        }
+                        :deep(h3) {
+                            font-size: 15px;
+                        }
+                        :deep(p) {
+                            margin: 6px 0;
+                        }
+                        :deep(ul) {
+                            margin: 6px 0;
+                            padding-left: 18px;
+                        }
+                        :deep(li) {
+                            margin: 4px 0;
+                            list-style: disc;
+                        }
+                        :deep(code) {
+                            background: #ececec;
+                            border-radius: 4px;
+                            padding: 1px 4px;
+                            font-family: Menlo, Monaco, Consolas, monospace;
+                            font-size: 12px;
+                        }
+                        :deep(hr) {
+                            border: none;
+                            border-top: 1px solid #d9d9d9;
+                            margin: 10px 0;
+                        }
+                        :deep(.env-process-box) {
+                            margin: 4px 0 8px 0;
+                        }
+                        :deep(.env-process-box > summary) {
+                            cursor: pointer;
+                            font-weight: 600;
+                            list-style: none;
+                            outline: none;
+                        }
+                        :deep(.env-process-box > summary::-webkit-details-marker) {
+                            display: none;
+                        }
+                        :deep(.env-process-body) {
+                            margin-top: 6px;
+                        }
+                        :deep(.env-stage-title) {
+                            color: #1f1f1f;
+                            font-weight: 500;
+                            margin: 6px 0;
+                        }
+                        :deep(.env-stage-sub) {
+                            color: #8c8c8c;
+                            margin: 4px 0 4px 14px;
+                            padding-left: 8px;
+                            border-left: 2px solid #d9d9d9;
+                        }
+                    };
+                    .dialog_content_dialogue_user {
+                        width: auto; /* 明确指出宽度自动调整 */
+                        max-width: 80%; /* 设置最大宽度为父容器的80% */
+                        background: rgba(41,50,225,0.90);
+                        border-radius: 25px;
+                        font-family: PingFangSC-Regular;
+                        font-size: 14px;
+                        color: #FFFFFF;
+                        line-height: 30px;
+                        font-weight: 400;
+                        padding: 0px 16px;
+                        box-sizing: border-box;
+                    };
+                };
+            };
+            .move_dialogue {
+                justify-content: flex-end;
+            };
+
+        };
+       
+        .btn_select_area {
+            width: 124px;
+            height: 42px;
+            line-height: 42px;
+            background: #FFFFFF;
+            box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.09);
+            border-radius: 21px;
+            padding: 0px 24px;
+            box-sizing: border-box;
+            position: absolute;
+            left: 55px;
+            bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            span {
+                display: inline-block;
+                &:nth-of-type(1) {
+                    width: 16px;
+                    height: 16px;
+                    background: url("../../../assets/image/ic_Replace_example.svg");
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 16px 16px;
+                   
+                };
+                &:nth-of-type(2) {
+                    height: 20px;
+                    font-family: PingFangSC-Regular;
+                    font-size: 14px;
+                    color: #F33E3E;
+                    text-align: center;
+                    font-weight: 400;
+                    line-height: 20px;
+                    margin-left: 4px;
+                };
+            };
+        };
+        .btn_end_dialog {
+            width: 124px;
+            height: 42px;
+            line-height: 42px;
+            background: #FFFFFF;
+            box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.09);
+            border-radius: 21px;
+            padding: 0px 24px;
+            box-sizing: border-box;
+            position: absolute;
+            left: 234px;
+            bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            span {
+                display: inline-block;
+                &:nth-of-type(1) {
+                    width: 16px;
+                    height: 16px;
+                    background: url("../../../assets/image/ic_small-end.svg");
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 16px 16px;
+                   
+                };
+                &:nth-of-type(2) {
+                    height: 20px;
+                    font-family: PingFangSC-Regular;
+                    font-size: 14px;
+                    color: #F33E3E;
+                    text-align: center;
+                    font-weight: 400;
+                    line-height: 20px;
+                    margin-left: 4px;
+                };
+            };
+        };
+        .btn_record_dialog {
+            width: 124px;
+            height: 42px;
+            line-height: 42px;
+            background: #FFFFFF;
+            box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.09);
+            border-radius: 21px;
+            padding: 0px 24px;
+            box-sizing: border-box;
+            position: absolute;
+            left: 413px;
+            bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            span {
+                display: inline-block;
+                &:nth-of-type(1) {
+                    width: 16px;
+                    height: 16px;
+                    background: url("../../../assets/image/ic_start-chat.svg");
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 16px 16px;
+
+                };
+                &:nth-of-type(2) {
+                    height: 20px;
+                    font-family: PingFangSC-Regular;
+                    font-size: 14px;
+                    color: #F33E3E;
+                    text-align: center;
+                    font-weight: 400;
+                    line-height: 20px;
+                    margin-left: 4px;
+                };
+            };
+        };
+        .btn_send_dialog {
+            width: 124px;
+            height: 42px;
+            line-height: 42px;
+            background: #FFFFFF;
+            box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.09);
+            border-radius: 21px;
+            padding: 0px 24px;
+            box-sizing: border-box;
+            position: absolute;
+            left: 592px;
+            bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            span {
+                display: inline-block;
+                &:nth-of-type(1) {
+                    width: 16px;
+                    height: 16px;
+                    background: url("../../../assets/image/ic_Replace_example.svg");
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 16px 16px;
+
+                };
+                &:nth-of-type(2) {
+                    height: 20px;
+                    font-family: PingFangSC-Regular;
+                    font-size: 14px;
+                    color: #F33E3E;
+                    text-align: center;
+                    font-weight: 400;
+                    line-height: 20px;
+                    margin-left: 4px;
+                };
+            };
+        };
+        .public_recognition_result {
+            position: absolute;
+            left: 10px;
+            bottom: 60px;
+            width: 760px;
+            height: 100px;
+            background: #FAFAFA;
+            padding: 0px 0px 0px 0px;
+            // 禁用拖拽功能，启用文字选择
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            textarea {
+                width: 100%;
+                height: 100%;
+                font-family: PingFangSC-Medium;
+                font-size: 16px;
+                color: #666666;
+                line-height: 26px;
+                font-weight: 500;
+                margin-bottom: 20px;
+                // 确保textarea可以正常选择文字
+                user-select: text;
+                -webkit-user-select: text;
+                -moz-user-select: text;
+                -ms-user-select: text;
+                // 禁用拖拽
+                resize: none;
+                outline: none;
+                border: none;
+                background: transparent;
+            };
+        };
+
+    };
+};

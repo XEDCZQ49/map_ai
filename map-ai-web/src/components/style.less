@@ -1,0 +1,88 @@
+.experience {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    // background: url("../assets/image/在线体验-背景@2x.png") no-repeat;
+    background-size: 100%;
+    background-position: initial;   
+    // 
+    .experience_wrapper {
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        padding: 0px 0px 0px 0px;
+        box-sizing: border-box;
+        // background: red;
+        .experience_title {
+            height: 42px;
+            font-family: PingFangSC-Semibold;
+            font-size: 30px;
+            color: #000000;
+            font-weight: 600;
+            line-height: 42px;
+            text-align: center;
+            margin-bottom: 10px;
+        };
+        .experience_describe {
+            height: 22px;
+            font-family: PingFangSC-Regular;
+            font-size: 14px;
+            color: #666666;
+            letter-spacing: 0;
+            text-align: center;
+            line-height: 22px;
+            font-weight: 400;
+            margin-bottom: 30px;
+        };
+        .experience_content {
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: left;
+            min-width: 0;
+            .experience_tabs {
+                    width: 100%;
+                    height: 100%;
+                    margin-top: 0;
+                    min-width: 0;
+            };
+        };
+    };
+};
+
+.experience .experience_tabs .el-tabs__content {
+    height: calc(100% - 40px);
+    overflow: hidden;
+    padding: 0;
+}
+
+.experience .experience_tabs.el-tabs--border-card > .el-tabs__content {
+    padding: 0;
+}
+
+.experience .experience_tabs .el-tab-pane {
+    height: 100%;
+    overflow: hidden;
+}
+
+.experience .experience_tabs > .el-tabs__header .el-tabs__nav {
+    display: flex;
+    width: 100%;
+}
+
+.experience .experience_tabs > .el-tabs__header .el-tabs__item {
+    flex: 1 1 16.6667%;
+    max-width: 16.6667%;
+    text-align: center;
+    padding: 0;
+}
+
+.experience::after {
+    content: "";
+    display: block;
+    clear: both;
+    visibility: hidden;
+}
