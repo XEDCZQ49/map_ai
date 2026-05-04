@@ -1,0 +1,33 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+map-ai-server/target/
+map-ai-web/dist/
+map-ai-web/dist-ssr/
+map-ai-web/node_modules/
+
+# Local override config
+application-local.yml
+application-local.yaml
+application-local.properties
+
