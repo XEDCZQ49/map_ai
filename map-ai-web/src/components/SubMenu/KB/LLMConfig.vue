@@ -33,7 +33,7 @@
           <el-input
             v-model="nowPrompt"
             type="textarea"
-            :rows="21"
+            :rows="20"
             resize="none"
             placeholder="请选择节点"
             :disabled="!selectedNodeKey || loading"
@@ -285,11 +285,15 @@ export default {
 
 .smart-config-main {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   padding: 12px;
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+}
+
+:deep(.el-textarea__inner) {
+  overflow: auto;
 }
 
 .panel-title {

@@ -4,12 +4,21 @@
   <div class="plan-panel" v-if="currentPlanId">
     <div class="plan-row">
       <label for="plan-select">战场选择：</label>
-      <select id="plan-select" :value="currentPlanId" @change="handlePlanChange($event.target.value)">
-        <option :value="NEW_PLAN_OPTION_VALUE">+ 创建新地图</option>
-        <option v-for="plan in planOptions" :key="plan.plan_id" :value="plan.plan_id">
-          {{ plan.plan_name || plan.plan_id }}
-        </option>
-      </select>
+      <el-select
+        id="plan-select"
+        :model-value="currentPlanId"
+        placeholder="选择战场"
+        popper-class="plan-select-popper"
+        @change="handlePlanChange"
+      >
+        <el-option :value="NEW_PLAN_OPTION_VALUE" label="+ 创建新地图" />
+        <el-option
+          v-for="plan in planOptions"
+          :key="plan.plan_id"
+          :value="plan.plan_id"
+          :label="plan.plan_name || plan.plan_id"
+        />
+      </el-select>
     </div>
     <div class="plan-row">状态：{{ planStatusText }}</div>
     <div class="plan-actions">
@@ -756,9 +765,13 @@ body,
   gap: 8px;
 }
 
-.plan-panel select {
-  min-width: 140px;
-  padding: 4px 8px;
+.plan-row label {
+  white-space: nowrap;
+  min-width: 64px;
+}
+
+.plan-panel :deep(.el-select) {
+  min-width: 100px;
 }
 
 .plan-actions {
