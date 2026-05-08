@@ -11,6 +11,9 @@ import com.example.mapaiserver.redis.service.CommandRegistryService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +23,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +37,8 @@ import java.util.stream.Collectors;
  * 负责指令判定、指令解析、切分部署和环境分析主流程编排。
  */
 public class LlmGraphService {
+    private static final Logger log = LoggerFactory.getLogger(LlmGraphService.class);
+    // 提示词节点：对应 Redis 中的 now prompt key。
     private static final String NODE_DRW_COMMAND_JUDGE = "DRW_COMMAND_JUDGE";
     private static final String NODE_DRW_COMMAND_RECOGNITION = "DRW_COMMAND_RECOGNITION";
     private static final String NODE_DRW_CHAT_GUIDE = "DRW_CHAT_GUIDE";
@@ -40,6 +48,7 @@ public class LlmGraphService {
     private static final String NODE_ENV_BBOX_CITY = "ENV_BBOX_CITY";
     private static final String NODE_ENV_SUMMARY = "ENV_SUMMARY";
 
+    // 白名单：所有模型输出都会被二次清洗，只允许这些值进入前端执行链路。
     private static final Set<String> ALLOWED_INTENT = Set.of("chat", "instruction");
     private static final Set<String> ALLOWED_FUNCTION = Set.of(
             "add_tank", "add_aircraft", "add_by", "add_car",
@@ -60,6 +69,7 @@ public class LlmGraphService {
     private final QWeatherMcpService qWeatherMcpService;
     private final PromptStoreService promptStoreService;
     private final CommandRegistryService commandRegistryService;
+    private final ThreadPoolExecutor aiExecutor; //自定义线程池
     @Value("${llm.split.model:qwen-turbo}")
     private String splitModel;
 
@@ -68,13 +78,32 @@ public class LlmGraphService {
             ObjectMapper objectMapper,
             QWeatherMcpService qWeatherMcpService,
             PromptStoreService promptStoreService,
-            CommandRegistryService commandRegistryService
-    ) {
+            CommandRegistryService commandRegistryService)
+    {
         this.chatClient = ChatClient.builder(chatModel).build();
         this.objectMapper = objectMapper;
         this.qWeatherMcpService = qWeatherMcpService;
         this.promptStoreService = promptStoreService;
         this.commandRegistryService = commandRegistryService;
+        int cores = Math.max(2, Runtime.getRuntime().availableProcessors());//核心线程数
+        this.aiExecutor = new ThreadPoolExecutor(
+                cores,
+                cores * 2,
+                60L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(500),//阻塞队列
+                r -> {
+                    Thread t = new Thread(r);
+                    t.setName("ai-task-" + t.getId());
+                    return t;
+                },//线程工厂
+                new ThreadPoolExecutor.CallerRunsPolicy()//拒绝策略
+        );
+    }
+
+    @PreDestroy
+    public void shutdownExecutor() {
+        aiExecutor.shutdown();
     }
 
     public GraphRunResponse runGraph(String userText) {
@@ -82,6 +111,7 @@ public class LlmGraphService {
     }
 
     public GraphRunResponse runGraph(String userText, String planId) {
+        // planId 由后端统一兜底，避免前端未传导致命令散落到未知会话。
         String workingPlanId = commandRegistryService.ensureWorkingPlan(planId);
         JudgeNodeResult judge = runJudge(userText);
         if ("instruction".equals(judge.intent())) {
@@ -124,7 +154,7 @@ public class LlmGraphService {
                 item.put("commands", resp.commands() == null ? List.of() : resp.commands());
                 item.put("chat", resp.chat());
                 return item;
-            }));
+            }, aiExecutor));
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -170,6 +200,7 @@ public class LlmGraphService {
                     emitter.complete();
                     return;
                 }
+                log.info("后端收到 splitCommands：{}", splitCommands);
 
                 sendSseThreadSafe(emitter, "start", Map.of(
                         "mode", "split_parallel_graph_stream",
@@ -183,12 +214,14 @@ public class LlmGraphService {
                 for (int i = 0; i < splitCommands.size(); i++) {
                     final int index = i;
                     final String cmdText = splitCommands.get(i);
-                    CompletableFuture<Void> f = CompletableFuture.supplyAsync(() -> runGraph(cmdText, workingPlanId))
+                    log.info("解析指令：{}", cmdText);
+                    CompletableFuture<Void> f = CompletableFuture.supplyAsync(() -> runGraph(cmdText, workingPlanId), aiExecutor)
                             .thenAccept(resp -> {
                                 List<CommandActionDto> commands = resp.commands() == null ? List.of() : resp.commands();
                                 if (!commands.isEmpty()) {
                                     mergedCommands.addAll(commands);
                                 }
+                                log.info("执行指令：{}", cmdText);
                                 Map<String, Object> item = new LinkedHashMap<>();
                                 item.put("index", index);
                                 item.put("input", cmdText);
@@ -218,7 +251,7 @@ public class LlmGraphService {
                 ));
                 emitter.completeWithError(e);
             }
-        });
+        }, aiExecutor);
     }
 
     private List<String> ruleSplitCommands(String rawText) {
@@ -272,6 +305,7 @@ public class LlmGraphService {
             if (out.isEmpty()) {
                 return List.of(needClarification("未识别到可执行动作"));
             }
+            // 统一在后端分配/修正 id，避免模型生成 id 不稳定或重复。
             return commandRegistryService.assignIds(planId, out);
         } catch (Exception ignored) {
             return List.of(needClarification("解析失败，请补充更明确的指令"));
@@ -385,7 +419,7 @@ public class LlmGraphService {
                 ));
                 emitter.completeWithError(e);
             }
-        });
+        }, aiExecutor);
     }
 
     private JsonNode runEnvGeoJudgeNode(String userText) {
@@ -445,7 +479,8 @@ public class LlmGraphService {
                 return out;
             }
 
-            // 非大范围：按 city / point / 小bbox（中心点）查询
+            // 非大范围：按 city / point / 小 bbox（中心点）查询。
+            // 目标是控制调用成本并保证结果可解释。
             if ("city".equals(locationType)) {
                 String city = geo.path("city").asText("");
                 if (city != null && !city.isBlank()) {
@@ -479,7 +514,7 @@ public class LlmGraphService {
                 return out;
             }
 
-            // unknown 兜底
+            // unknown 兜底：把原文直接作为 location 尝试查询。
             logProgress(progressLogger, "位置类型不明确，按原始文本兜底查询");
             out.put("singleReport", queryWeatherBundleByLocation(userText));
             out.put("queryStrategy", "fallback_raw_text");
@@ -642,6 +677,7 @@ public class LlmGraphService {
                     .content();
             return content == null ? "" : content;
         } catch (Exception e) {
+            // 统一把供应商内容安全错误转成业务可理解异常，避免前端直接看到供应商错误码。
             if (isContentPolicyBlocked(e)) {
                 throw new ContentPolicyBlockedException("当前指令触发内容安全策略，请改用“演训/推演”表述或拆分后重试。");
             }
@@ -698,6 +734,7 @@ public class LlmGraphService {
             modelMessage = "success";
         }
 
+        // 兼容 function_name / functionName 两种命名，减少提示词版本切换带来的兼容成本。
         String functionName = item.has("function_name")
                 ? item.path("function_name").asText("")
                 : item.path("functionName").asText("");
@@ -728,6 +765,7 @@ public class LlmGraphService {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> normalizeArguments(String functionName, Map<String, Object> args, List<String> missing, String userText) {
+        // 参数归一化：只做“格式和最小必填”修正，不在此处做业务推理，便于定位问题。
         Map<String, Object> out = new LinkedHashMap<>();
         switch (functionName) {
             case "add_tank", "add_aircraft", "add_by", "add_car" -> {
@@ -874,6 +912,7 @@ public class LlmGraphService {
     }
 
     private List<List<Double>> resolvePointsFromContext(List<String> missing, String userText, int minCount, int maxCount) {
+        // 当模型只给地名时，尝试从 missing/userText 抽取地点，再用 geoCityLookup 补经纬度。
         List<String> hints = collectLocationHints(missing, userText);
         if (hints.isEmpty()) return List.of();
 
@@ -993,6 +1032,7 @@ public class LlmGraphService {
     }
 
     private CommandActionDto needClarification(String missingMessage) {
+        // 兜底结构固定，前端按 message=need_clarification 分支处理即可。
         return new CommandActionDto(
                 "need_clarification",
                 "add_tank",
@@ -1003,6 +1043,7 @@ public class LlmGraphService {
     }
 
     private JsonNode extractJsonNode(String raw) throws Exception {
+        // 兼容 ```json ... ``` 输出，先剥离代码块再 parse。
         String text = raw == null ? "" : raw.trim();
         if (text.startsWith("```")) {
             int first = text.indexOf('{');
